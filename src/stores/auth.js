@@ -1,49 +1,67 @@
-import { defineStore } from 'pinia'
-import api from '@/services/api'
-import { useCartStore } from './cart'
+export default class auth {
+  static API_URL = "http://localhost:8080/tymelesstyre/user/";
 
-export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    user: null,
-    token: localStorage.getItem('authToken') || null,
-    isAuthenticated: !!localStorage.getItem('authToken'),
-  }),
-  actions: {
-    async login(credentials) {
-      try {
-        const response = await api.login(credentials)
-        this.token = response.token
-        this.user = response.user
-        this.isAuthenticated = true
-        localStorage.setItem('authToken', this.token)
+  static async login(username, password) {
+    try {
+      const response = await fetch(this.API_URL + "login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-        // Load user's cart from backend if needed
-        const cartStore = useCartStore()
-        await cartStore.loadUserCart(this.user.id)
-
-        return { success: true }
-      } catch (error) {
-        return { success: false, error: error.response?.data?.message || 'Login failed' }
+      const result = await response.text();
+      if (!response.ok) {
+        throw new Error(result || "Login failed. Please check your credentials.");
       }
-    },
 
-    async register(userData) {
-      try {
-        const response = await api.registerUser(userData)
-        return { success: true, data: response }
-      } catch (error) {
-        return { success: false, error: error.response?.data?.message || 'Registration failed' }
+      let role = "";
+      if (result.includes("/admin/dashboard")) role = "ADMIN";
+      else if (result.includes("/customer/dashboard")) role = "CUSTOMER";
+      else throw new Error("Unknown role returned from backend");
+
+      const user = { username, role, redirectPath: result };
+      localStorage.setItem("user", JSON.stringify(user));
+
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  static async register(username, email, password, role) {
+    try {
+      const payload = { 
+        username, 
+        email, 
+        password, 
+        role: role.toUpperCase()
+      };
+
+      console.log("Register payload:", payload); 
+
+      const response = await fetch(this.API_URL + "register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.text();
+      if (!response.ok) {
+        throw new Error(result || "Registration failed");
       }
-    },
 
-    logout() {
-      this.user = null
-      this.token = null
-      this.isAuthenticated = false
-      localStorage.removeItem('authToken')
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  }
 
-      const cartStore = useCartStore()
-      cartStore.clearCart()
-    },
-  },
-})
+  static logout() {
+    localStorage.removeItem("user");
+  }
+
+  static getCurrentUser() {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+  }
+}

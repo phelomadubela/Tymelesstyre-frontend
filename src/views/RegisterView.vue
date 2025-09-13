@@ -1,79 +1,104 @@
 <template>
-  <div class="auth-container">
-    <div class="auth-card glass-card">
-      <h2>Create Account</h2>
-      <form @submit.prevent="handleRegister">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input v-model="userData.name" type="text" class="form-input" required />
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input v-model="userData.email" type="email" class="form-input" required />
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input v-model="userData.password" type="password" class="form-input" required />
-        </div>
-        <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? 'Creating Account...' : 'Register' }}
-        </button>
-      </form>
-      <p class="auth-switch">
-        Already have an account? <router-link to="/login">Login here</router-link>
-      </p>
-    </div>
+  <div class="register-container">
+    <h2>Register</h2>
+    <form @submit.prevent="handleRegister">
+      <div class="form-group">
+        <label>Username</label>
+        <input v-model="username" type="text" placeholder="Enter username" required />
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input v-model="email" type="email" placeholder="Enter email" required />
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input v-model="password" type="password" placeholder="Enter password" required />
+      </div>
+
+      <div class="form-group">
+        <label>Role</label>
+        <select v-model="role" required>
+          <option value="">Select role</option>
+          <option value="CUSTOMER">Customer</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      </div>
+
+      <button type="submit" :disabled="loading">
+        {{ loading ? "Registering..." : "Register" }}
+      </button>
+
+      <p v-if="error" class="error">{{ error }}</p>
+    </form>
+
+    <p class="login-link">
+      Already have an account?
+      <router-link to="/login">Login here</router-link>
+    </p>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+<script>
+import auth from '../stores/auth.js'
 
-const userData = ref({
-  name: '',
-  email: '',
-  password: '',
-})
-const loading = ref(false)
-const router = useRouter()
+export default {
+  name: "RegisterView",
+  data() {
+    return {
+      username: "",
+      email: "",
+      password: "",
+      role: "",
+      loading: false,
+      error: null,
+    }
+  },
+  methods: {
+    async handleRegister() {
+      this.error = null;
+      this.loading = true;
+      try {
+      
+        await auth.register(this.username, this.email, this.password, this.role);
 
-const handleRegister = async () => {
-  loading.value = true
-  // Simulate registration
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-  alert('Registration successful!')
-  router.push('/login')
-  loading.value = false
+        this.$router.push("/login");
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.loading = false;
+      }
+    }
+  }
 }
 </script>
 
 <style scoped>
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 60vh;
-  padding: 2rem;
-}
-
-.auth-card {
-  width: 100%;
+.register-container {
   max-width: 400px;
-  padding: 2rem;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
 }
-
-.auth-switch {
-  margin-top: 1rem;
-  text-align: center;
+h2 { text-align: center; margin-bottom: 20px; }
+.form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+label { margin-bottom: 5px; font-weight: bold; }
+input, select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: #2f80ed;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
-
-.auth-switch a {
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.auth-switch a:hover {
-  text-decoration: underline;
-}
+button:disabled { background-color: #7aaefc; cursor: not-allowed; }
+.error { color: red; margin-top: 10px; text-align: center; }
+.login-link { text-align: center; margin-top: 15px; }
 </style>

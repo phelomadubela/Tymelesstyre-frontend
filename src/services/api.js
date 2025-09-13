@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8080/tymelesstyre/api'
+const API_BASE_URL = 'http://localhost:8080/tymelesstyre' //can be changed later on
 
 // Create axios instance with default config
 const api = axios.create({
@@ -27,16 +27,14 @@ api.interceptors.request.use(
 
 // API methods
 export default {
-  // User endpoints
   async registerUser(userData) {
-    const response = await api.post('/users', userData)
-    return response.data
-  },
-
+  const response = await api.post('/user/register', userData)
+  return response.data
+},
   async login(credentials) {
-    const response = await api.post('/auth/login', credentials)
-    return response.data
-  },
+  const response = await api.post('/user/login', credentials)
+  return response.data
+},
 
   // Tyre endpoints
   async getTyresByVehicle(make, model, year) {
@@ -75,3 +73,12 @@ export default {
     }
   },
 }
+
+
+
+
+
+
+
+
+
