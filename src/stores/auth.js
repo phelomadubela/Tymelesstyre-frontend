@@ -14,15 +14,23 @@ export default class auth {
         throw new Error(result || "Login failed. Please check your credentials.");
       }
 
+     
       let role = "";
-      if (result.includes("/admin/dashboard")) role = "ADMIN";
-      else if (result.includes("/customer/dashboard")) role = "CUSTOMER";
-      else throw new Error("Unknown role returned from backend");
+      let redirectPath = "/";
+      if (result.includes("/admin/dashboard")) {
+        role = "ADMIN";
+        redirectPath = "/adminusers"; 
+      } else if (result.includes("/customer/dashboard")) {
+        role = "CUSTOMER";
+        redirectPath = "/customer/dashboard";  
+      } else {
+        throw new Error("Unknown role returned from backend");
+      }
 
-      const user = { username, role, redirectPath: result };
+      const user = { username, role, redirectPath };
       localStorage.setItem("user", JSON.stringify(user));
 
-      return result;
+      return user;  
     } catch (err) {
       throw err;
     }
