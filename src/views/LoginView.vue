@@ -30,6 +30,12 @@
 
       <p v-if="error" class="error">{{ error }}</p>
     </form>
+
+   
+    <p class="register-link">
+      Don't have an account? 
+      <router-link to="/register">Register here</router-link>
+    </p>
   </div>
 </template>
 
@@ -53,8 +59,6 @@ export default {
 
       try {
         const user = await auth.login(this.username, this.password);
-
-       
         this.$router.push(user.redirectPath);
       } catch (err) {
         this.error = err.message || "Login failed. Please try again.";
@@ -124,5 +128,21 @@ export default {
   color: red;
   margin-top: 10px;
   text-align: center;
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #555;
+}
+.register-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+  margin-left: 4px;
+}
+.register-link a:hover {
+  text-decoration: underline;
 }
 </style>
