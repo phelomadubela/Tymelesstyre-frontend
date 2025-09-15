@@ -4,6 +4,7 @@ export const useCartStore = defineStore('cart', {
   state: () => ({
     items: JSON.parse(localStorage.getItem('cartItems')) || [],
     total: 0,
+    discount: 0, // discount in Rands
   }),
 
   actions: {
@@ -43,9 +44,16 @@ export const useCartStore = defineStore('cart', {
     },
 
     calculateTotal() {
-      this.total = this.items.reduce((sum, item) => {
+      const subtotal = this.items.reduce((sum, item) => {
         return sum + item.price * item.quantity
       }, 0)
+      // Example discount logic: 10% off if subtotal > 2000
+      if (subtotal > 2000) {
+        this.discount = subtotal * 0.1
+      } else {
+        this.discount = 0
+      }
+      this.total = subtotal - this.discount
     },
 
     saveToLocalStorage() {
@@ -68,5 +76,9 @@ export const useCartStore = defineStore('cart', {
     itemCount: (state) => state.items.reduce((count, item) => count + item.quantity, 0),
     cartItems: (state) => state.items,
     cartTotal: (state) => state.total.toFixed(2),
+    cartDiscount: (state) => state.discount.toFixed(2),
+    cartSubtotal: (state) => {
+      return state.items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)
+    },
   },
 })

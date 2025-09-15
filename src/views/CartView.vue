@@ -27,6 +27,8 @@
       </div>
 
       <div class="cart-summary">
+        <h3>Subtotal: R{{ cartSubtotal }}</h3>
+        <h3 v-if="cartDiscount > 0">Discount: -R{{ cartDiscount }}</h3>
         <h3>Total: R{{ cartTotal }}</h3>
         <router-link to="/checkout" class="btn-primary">Proceed to Checkout</router-link>
       </div>
@@ -39,7 +41,7 @@ import { useCartStore } from '@/stores/cart'
 import { storeToRefs } from 'pinia'
 
 const cartStore = useCartStore()
-const { cartItems, cartTotal } = storeToRefs(cartStore)
+const { cartItems, cartTotal, cartDiscount, cartSubtotal } = storeToRefs(cartStore)
 
 const updateQuantity = (productId, newQuantity) => {
   if (newQuantity < 1) {
@@ -51,5 +53,10 @@ const updateQuantity = (productId, newQuantity) => {
 
 const removeItem = (productId) => {
   cartStore.removeItem(productId)
+}
+
+// Example usage for adding an item (should be called from product page)
+const addItem = (product, quantity = 1) => {
+  cartStore.addItem(product, quantity)
 }
 </script>

@@ -42,9 +42,34 @@
 
       <div class="order-summary">
         <h2>Order Summary</h2>
+        <!-- Voucher slot -->
+        <div class="voucher-slot">
+          <label for="voucher">Voucher Code:</label>
+          <input id="voucher" v-model="voucherCode" class="form-input" placeholder="Enter voucher code" />
+          <button class="btn-primary" @click="applyVoucher" :disabled="voucherApplying">
+            {{ voucherApplying ? 'Applying...' : 'Apply Voucher' }}
+          </button>
+          <span v-if="voucherError" class="voucher-error">{{ voucherError }}</span>
+        </div>
+        <div class="summary-header">
+          <span>Product</span>
+          <span>Description</span>
+          <span>Price</span>
+          <span>Quantity</span>
+          <span>Subtotal</span>
+        </div>
         <div v-for="item in cartItems" :key="item.id" class="summary-item">
-          <span>{{ item.brand }} {{ item.model }} (x{{ item.quantity }})</span>
+          <span>{{ item.brand }} {{ item.model }}</span>
+          <span>{{ item.description || 'No description' }}</span>
+          <span>R{{ item.price.toFixed(2) }}</span>
+          <span>{{ item.quantity }}</span>
           <span>R{{ (item.price * item.quantity).toFixed(2) }}</span>
+        </div>
+        <div class="summary-total">
+          <strong>Subtotal: R{{ cartSubtotal }}</strong>
+        </div>
+        <div v-if="cartDiscount > 0" class="summary-discount">
+          <strong>Discount: -R{{ cartDiscount }}</strong>
         </div>
         <div class="summary-total">
           <strong>Total: R{{ cartTotal }}</strong>
@@ -78,6 +103,28 @@ const processing = ref(false)
 
 const cartItems = cartStore.cartItems
 const cartTotal = cartStore.cartTotal
+const cartDiscount = cartStore.cartDiscount
+const cartSubtotal = cartStore.cartSubtotal
+
+const voucherCode = ref('')
+const voucherApplying = ref(false)
+const voucherError = ref('')
+
+const applyVoucher = async () => {
+  voucherApplying.value = true
+  voucherError.value = ''
+  // Simulate voucher validation
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  if (voucherCode.value === 'DISCOUNT10') {
+    // Example: apply 10% discount
+    cartStore.discount = cartStore.cartSubtotal * 0.1
+    cartStore.total = cartStore.cartSubtotal - cartStore.discount
+    voucherError.value = ''
+  } else {
+    voucherError.value = 'Invalid voucher code'
+  }
+  voucherApplying.value = false
+}
 
 const handleSubmit = async () => {
   if (!authStore.isAuthenticated) {
@@ -116,6 +163,37 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
+/* Add styles for voucher slot and summary header */
+.voucher-slot {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.voucher-error {
+  color: rgba(133, 131, 131, 0.614);
+  margin-left: 1rem;
+}
+.summary-header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  font-weight: bold;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+.summary-item {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.summary-discount {
+  color: rgb(8, 102, 217);
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
 .checkout-page {
   max-width: 1200px;
   margin: 0 auto;
