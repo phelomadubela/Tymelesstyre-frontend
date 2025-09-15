@@ -52,7 +52,6 @@ export default {
       this.loading = true;
 
       try {
-        
         const user = await auth.login(this.username, this.password);
 
        

@@ -1,6 +1,6 @@
 <template>
-  <div class="admin-container">
-    <h2>Admin - Manage Users</h2>
+  <div class="admin-users-container">
+    <h2>User Management</h2>
 
     <table class="users-table">
       <thead>
@@ -15,123 +15,214 @@
       <tbody>
         <tr v-for="user in users" :key="user.id">
           <td>{{ user.id }}</td>
-          <td>{{ user.username }}</td>
-          <td>{{ user.email }}</td>
           <td>
-            <select v-model="user.role" @change="updateRole(user.id, user.role)">
-              <option value="CUSTOMER">CUSTOMER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
+            <input
+              v-if="editUser && editUser.id === user.id"
+              v-model="editUser.username"
+            />
+            <span v-else>{{ user.username }}</span>
           </td>
           <td>
-            <button class="delete-btn" @click="deleteUser(user.id)">Delete</button>
+            <input
+              v-if="editUser && editUser.id === user.id"
+              v-model="editUser.email"
+            />
+            <span v-else>{{ user.email }}</span>
+          </td>
+          <td>
+            <select
+              v-if="editUser && editUser.id === user.id"
+              v-model="editUser.role"
+              disabled
+            >
+              <option value="CUSTOMER">CUSTOMER</option>
+            </select>
+            <span v-else>{{ user.role }}</span>
+          </td>
+          <td>
+            <button
+              v-if="editUser && editUser.id === user.id"
+              @click="updateUser(user.id)"
+            >
+              Save
+            </button>
+            <button
+              v-if="editUser && editUser.id === user.id"
+              @click="cancelEdit"
+            >
+              Cancel
+            </button>
+            <button v-else @click="startEdit(user)">Edit</button>
+            <button @click="deleteUser(user.id)">Delete</button>
           </td>
         </tr>
       </tbody>
     </table>
-
-    <p v-if="users.length === 0" class="no-users">No users available.</p>
   </div>
 </template>
 
 <script>
-import auth from '../stores/auth.js';
-import axios from 'axios';
+import auth from "../stores/auth.js";
 
 export default {
-  name: "AdminUsers",
+  name: "AdminUsersManagement",
   data() {
     return {
       users: [],
+      editUser: null,
     };
   },
   methods: {
     async fetchUsers() {
       try {
-        const response = await axios.get("http://localhost:8080/admin/users");
-        this.users = response.data;
+        const response = await fetch(
+          "http://localhost:8080/tymelesstyre/admin/users"
+        );
+        if (!response.ok) throw new Error("Failed to fetch users");
+
+        const data = await response.json();
+        this.users = data.filter((u) => u.role === "CUSTOMER");
       } catch (err) {
-        console.error("Failed to fetch users:", err);
+        console.error("Error fetching users:", err);
+        alert("Failed to load users");
+      }
+    },
+    startEdit(user) {
+      this.editUser = { ...user };
+    },
+    cancelEdit() {
+      this.editUser = null;
+    },
+    async updateUser(id) {
+      try {
+        const numericId = Number(id);
+
+        // Only send fields we want to update (not id)
+        const payload = {
+          username: this.editUser.username,
+          email: this.editUser.email,
+          role: this.editUser.role,
+        };
+
+        const response = await fetch(
+          `http://localhost:8080/tymelesstyre/admin/users/${numericId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
+        if (!response.ok) throw new Error("Update failed");
+
+        this.editUser = null;
+        await this.fetchUsers();
+      } catch (err) {
+        console.error("Error updating user:", err);
+        alert("Update failed");
       }
     },
     async deleteUser(id) {
+      if (!confirm("Are you sure you want to delete this user?")) return;
+
       try {
-        await axios.delete(`http://localhost:8080/admin/users/${id}`);
-        this.users = this.users.filter(u => u.id !== id);
+        const numericId = Number(id);
+        const response = await fetch(
+          `http://localhost:8080/tymelesstyre/admin/users/${numericId}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (!response.ok) throw new Error("Delete failed");
+
+        await this.fetchUsers();
       } catch (err) {
-        console.error("Failed to delete user:", err);
-      }
-    },
-    async updateRole(id, role) {
-      try {
-        await axios.put(`http://localhost:8080/admin/users/${id}/role?role=${role}`);
-        alert(`Role updated to ${role}`);
-      } catch (err) {
-        console.error("Failed to update role:", err);
-      }
-    },
-    checkAdmin() {
-      const user = auth.getCurrentUser();
-      if (!user || user.role !== "ADMIN") {
-        this.$router.push("/login"); 
-      } else {
-        this.fetchUsers(); 
+        console.error("Error deleting user:", err);
+        alert("Delete failed");
       }
     },
   },
   mounted() {
-    this.checkAdmin();
+    const currentUser = auth.getCurrentUser();
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      this.$router.push("/login");
+    } else {
+      this.fetchUsers();
+    }
   },
 };
 </script>
 
 <style scoped>
-.admin-container {
-  max-width: 800px;
+.admin-users-container {
+  max-width: 900px;
   margin: 40px auto;
   padding: 30px;
   background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   font-family: Arial, sans-serif;
 }
+
 h2 {
   text-align: center;
   margin-bottom: 20px;
 }
+
 .users-table {
   width: 100%;
   border-collapse: collapse;
 }
-.users-table th, .users-table td {
+
+.users-table th,
+.users-table td {
   border: 1px solid #ccc;
-  padding: 10px;
-  text-align: center;
+  padding: 8px;
+  text-align: left;
 }
+
 .users-table th {
-  background-color: #2f80ed;
-  color: white;
+  background-color: #f4f4f4;
 }
-select {
-  padding: 5px;
-  border-radius: 5px;
+
+.users-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.users-table input,
+.users-table select {
+  width: 100%;
+  padding: 4px;
+  border-radius: 4px;
   border: 1px solid #ccc;
 }
-.delete-btn {
-  padding: 6px 10px;
-  background-color: #ff4d4f;
-  color: white;
+
+button {
+  margin-right: 5px;
+  padding: 5px 10px;
   border: none;
   border-radius: 5px;
+  font-weight: bold;
   cursor: pointer;
 }
-.delete-btn:hover {
-  background-color: #d9363e;
+
+button:hover {
+  opacity: 0.9;
 }
-.no-users {
-  text-align: center;
-  margin-top: 20px;
-  font-style: italic;
-  color: #666;
-}
+
+button:nth-child(1) {
+  background-color: #28a745;
+  color: white;
+} /* Save */
+button:nth-child(2) {
+  background-color: #6c757d;
+  color: white;
+} /* Cancel */
+button:nth-child(3) {
+  background-color: #007bff;
+  color: white;
+} /* Edit */
+button:nth-child(4) {
+  background-color: #dc3545;
+  color: white;
+} /* Delete */
 </style>
