@@ -81,7 +81,6 @@ export default {
         if (!response.ok) throw new Error("Failed to fetch users");
 
         const data = await response.json();
-      
         this.users = data.filter((u) => u.role === "CUSTOMER");
       } catch (err) {
         console.error("Error fetching users:", err);
@@ -97,18 +96,26 @@ export default {
     async updateUser(id) {
       try {
         const numericId = Number(id);
+
+        // Only send fields we want to update (not id)
+        const payload = {
+          username: this.editUser.username,
+          email: this.editUser.email,
+          role: this.editUser.role,
+        };
+
         const response = await fetch(
           `http://localhost:8080/tymelesstyre/admin/users/${numericId}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(this.editUser),
+            body: JSON.stringify(payload),
           }
         );
         if (!response.ok) throw new Error("Update failed");
 
         this.editUser = null;
-        await this.fetchUsers(); 
+        await this.fetchUsers();
       } catch (err) {
         console.error("Error updating user:", err);
         alert("Update failed");
@@ -127,7 +134,7 @@ export default {
         );
         if (!response.ok) throw new Error("Delete failed");
 
-        await this.fetchUsers(); 
+        await this.fetchUsers();
       } catch (err) {
         console.error("Error deleting user:", err);
         alert("Delete failed");
