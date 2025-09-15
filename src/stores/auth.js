@@ -1,5 +1,5 @@
 export default class auth {
-  static API_URL = "http://localhost:8080/tymelesstyre/user/";
+  static API_URL = "http://localhost:8080/tymelesstyre/userss/";
 
   static async login(username, password) {
     try {
@@ -18,10 +18,10 @@ export default class auth {
       let redirectPath = "/";
       if (result.includes("/admin/dashboard")) {
         role = "ADMIN";
-        redirectPath = "/admin/users"; 
+        redirectPath = "/admin/users";
       } else if (result.includes("/customer/dashboard")) {
         role = "CUSTOMER";
-        redirectPath = "/"; 
+        redirectPath = "/";
       } else {
         throw new Error("Unknown role returned from backend");
       }
@@ -35,7 +35,7 @@ export default class auth {
     }
   }
 
- 
+
   static async register(username, email, password, role) {
     try {
       const payload = {
@@ -62,12 +62,12 @@ export default class auth {
     }
   }
 
-  
+
   static logout() {
     localStorage.removeItem("user");
   }
 
-  
+
   static getCurrentUser() {
     const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
@@ -77,13 +77,13 @@ export default class auth {
     return !!this.getCurrentUser();
   }
 
-  
+
   static isAdmin() {
     const user = this.getCurrentUser();
     return user && user.role === "ADMIN";
   }
 
-  
+
   static isCustomer() {
     const user = this.getCurrentUser();
     return user && user.role === "CUSTOMER";

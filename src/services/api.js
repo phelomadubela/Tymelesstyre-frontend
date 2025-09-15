@@ -28,27 +28,32 @@ api.interceptors.request.use(
 // API methods
 export default {
   async registerUser(userData) {
-  const response = await api.post('/user/register', userData)
-  return response.data
-},
+    const response = await api.post('/user/register', userData)
+    return response.data
+  },
   async login(credentials) {
-  const response = await api.post('/user/login', credentials)
-  return response.data
-},
-
-  // Tyre endpoints
-  async getTyresByVehicle(make, model, year) {
-    const response = await api.get(`/tyres?make=${make}&model=${model}&year=${year}`)
+    const response = await api.post('/user/login', credentials)
     return response.data
   },
 
+  // Tyre endpoints
   async getAllTyres() {
-    const response = await api.get('/tyres')
+    const response = await api.get('/api/tyres')
     return response.data
   },
 
   async getTyreById(id) {
-    const response = await api.get(`/tyres/${id}`)
+    const response = await api.get(`/api/tyres/${id}`)
+    return response.data
+  },
+
+  async createTyre(tyreData) {
+    const response = await api.post('/api/tyres', tyreData)
+    return response.data
+  },
+
+  async createTyresBulk(tyresData) {
+    const response = await api.post('/api/tyres/bulk', tyresData)
     return response.data
   },
 
