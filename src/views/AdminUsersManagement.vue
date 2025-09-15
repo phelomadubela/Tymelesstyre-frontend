@@ -13,25 +13,25 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="user in users" :key="user.id">
-          <td>{{ user.id }}</td>
+        <tr v-for="user in users" :key="user.userId">
+          <td>{{ user.userId }}</td>
           <td>
             <input
-              v-if="editUser && editUser.id === user.id"
+              v-if="editUser && editUser.userId === user.userId"
               v-model="editUser.username"
             />
             <span v-else>{{ user.username }}</span>
           </td>
           <td>
             <input
-              v-if="editUser && editUser.id === user.id"
+              v-if="editUser && editUser.userId === user.userId"
               v-model="editUser.email"
             />
             <span v-else>{{ user.email }}</span>
           </td>
           <td>
             <select
-              v-if="editUser && editUser.id === user.id"
+              v-if="editUser && editUser.userId === user.userId"
               v-model="editUser.role"
               disabled
             >
@@ -41,19 +41,19 @@
           </td>
           <td>
             <button
-              v-if="editUser && editUser.id === user.id"
-              @click="updateUser(user.id)"
+              v-if="editUser && editUser.userId === user.userId"
+              @click="updateUser(user.userId)"
             >
               Save
             </button>
             <button
-              v-if="editUser && editUser.id === user.id"
+              v-if="editUser && editUser.userId === user.userId"
               @click="cancelEdit"
             >
               Cancel
             </button>
             <button v-else @click="startEdit(user)">Edit</button>
-            <button @click="deleteUser(user.id)">Delete</button>
+            <button @click="deleteUser(user.userId)">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -79,8 +79,8 @@ export default {
           "http://localhost:8080/tymelesstyre/admin/users"
         );
         if (!response.ok) throw new Error("Failed to fetch users");
-
         const data = await response.json();
+      
         this.users = data.filter((u) => u.role === "CUSTOMER");
       } catch (err) {
         console.error("Error fetching users:", err);
@@ -93,27 +93,17 @@ export default {
     cancelEdit() {
       this.editUser = null;
     },
-    async updateUser(id) {
+    async updateUser(userId) {
       try {
-        const numericId = Number(id);
-
-        // Only send fields we want to update (not id)
-        const payload = {
-          username: this.editUser.username,
-          email: this.editUser.email,
-          role: this.editUser.role,
-        };
-
         const response = await fetch(
-          `http://localhost:8080/tymelesstyre/admin/users/${numericId}`,
+          `http://localhost:8080/tymelesstyre/admin/users/${userId}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify(this.editUser),
           }
         );
         if (!response.ok) throw new Error("Update failed");
-
         this.editUser = null;
         await this.fetchUsers();
       } catch (err) {
@@ -121,19 +111,16 @@ export default {
         alert("Update failed");
       }
     },
-    async deleteUser(id) {
+    async deleteUser(userId) {
       if (!confirm("Are you sure you want to delete this user?")) return;
-
       try {
-        const numericId = Number(id);
         const response = await fetch(
-          `http://localhost:8080/tymelesstyre/admin/users/${numericId}`,
+          `http://localhost:8080/tymelesstyre/admin/users/${userId}`,
           {
             method: "DELETE",
           }
         );
         if (!response.ok) throw new Error("Delete failed");
-
         await this.fetchUsers();
       } catch (err) {
         console.error("Error deleting user:", err);
@@ -212,17 +199,17 @@ button:hover {
 button:nth-child(1) {
   background-color: #28a745;
   color: white;
-} /* Save */
+} 
 button:nth-child(2) {
   background-color: #6c757d;
   color: white;
-} /* Cancel */
+} 
 button:nth-child(3) {
   background-color: #007bff;
   color: white;
-} /* Edit */
+} 
 button:nth-child(4) {
   background-color: #dc3545;
   color: white;
-} /* Delete */
+} 
 </style>
