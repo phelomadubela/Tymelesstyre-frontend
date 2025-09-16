@@ -1,5 +1,5 @@
 export default class auth {
-  static API_URL = "http://localhost:8080/tymelesstyre/userss/";
+  static API_URL = "http://localhost:8080/tymelesstyre/user/"; // avoid adding extra "s" there that's why it wasn't connecting
 
   static async login(username, password) {
     try {
